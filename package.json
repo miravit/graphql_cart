@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "-": "0.0.1",
+    "@apollo/server": "^4.3.2",
+    "@graphql-tools/load-files": "^6.6.1",
+    "@graphql-tools/schema": "^9.0.14",
+    "D": "1.0.0",
+    "dotenv": "^16.0.3",
+    "graphql": "^16.6.0",
+    "prettier": "2.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  },
+  "scripts": {
+    "dev": "nodemon ./src/server.js"
+  }
+}
