@@ -107,7 +107,7 @@ exports.resolvers = {
       return newProduct;
     },
     addProductToCart: async (_, args) => {
-      const { cartId, productId } = args; //hämta cartid och product id. Så att man kan skriva in vilka man väljer i apollo.
+      const { cartId, productId } = args; //hämta cartid och product id. Dessa är alltså de man skriver in i apollo under variables
 
       const filePath = path.join(cartDirectory, `${cartId}.json`); //hitta carten med det id som skrivits in i args
       const cartExist = await fileExists(filePath); //om filen finns läggs den i cartExist.
