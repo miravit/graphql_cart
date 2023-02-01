@@ -125,7 +125,6 @@ exports.resolvers = {
 
       const cartFile = await fsPromises.readFile(filePath, {
         //läser cartfilen inkl alla products den innehåller. filepath är pathen och encoding gör att vi kan läsa den tydligare
-        //products-responsen
         encoding: "utf-8",
       });
       //console.log(cartFile);
