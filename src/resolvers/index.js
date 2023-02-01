@@ -14,86 +14,81 @@ const productDirectory = path.join(__dirname, "..", "data", "products"); //filv�
 exports.resolvers = {
   Query: {
     getAllCarts: async (_, args) => {
-      const carts = await getDirectoryFileNames(cartDirectory);
+      const carts = await getDirectoryFileNames(cartDirectory); //alla filer i carts
 
       const cartData = [];
 
       for (const file of carts) {
-        const filePath = path.join(cartDirectory, file);
+        //för varje fil i cartsmappen
+        const filePath = path.join(cartDirectory, file); //gå in i filen
 
         const fileContents = await fsPromises.readFile(filePath, {
+          //hämta och läs filen
           encoding: "utf-8",
         });
-        const data = JSON.parse(fileContents);
+        const data = JSON.parse(fileContents); //gör om från JSON till javascript
 
-        cartData.push(data);
+        cartData.push(data); //pusha objekten i tomma listan så de kan presenteras.
       }
-      return cartData;
+      return cartData; //returnera listan.
     },
     getCartById: async (_, args) => {
-      const cartId = args.cartId;
+      const cartId = args.cartId; //lagra id som skrivits in i inputen i cartID-variabeln
 
-      const cartFilePath = path.join(cartDirectory, `${cartId}.json`);
+      const cartFilePath = path.join(cartDirectory, `${cartId}.json`); //hitta sökvägen
 
-      const cartExists = await fileExists(cartFilePath);
+      const cartExists = await fileExists(cartFilePath); //filen hittas
 
       if (!cartExists)
+        //om det inte blir någon response och filen inte finns skickas felmeddelande
         return new GraphQLError("The cart you are looking for does not exist");
       const cartData = await fsPromises.readFile(cartFilePath, {
+        //om den finns så läses filens innehåll här och lagras i cartData-variabeln
         encoding: "utf-8",
       });
 
-      const data = JSON.parse(cartData);
+      const data = JSON.parse(cartData); //gör om från JSON till javascript lägg i variabeln data
 
-      return data;
+      return data; //returnera data
     },
   },
   Mutation: {
     createNewCart: async (_, args) => {
       const newCart = {
+        //skapar ny cart där id blir slumpat, totalamount är 0 och product-listan är tom.
         id: crypto.randomUUID(),
         totalamount: 0,
         products: [],
       };
 
-      let filePath = path.join(cartDirectory, `${newCart.id}.json`);
+      let filePath = path.join(cartDirectory, `${newCart.id}.json`); //skapar filvägen med nya ID
 
-      let idExists = true;
-      while (idExists) {
-        const exists = await fileExists(filePath);
-        console.log(exists, newCart.id);
-        //är detta ifall id redan finns så slumpas ett nytt id?
-        // if (exists) {
-        //   newCart.id = crypto.randomUUID();
-        //   filePath = path.join(cartDirectory, `${newCart.id}.json`);
-        // }
-
-        idExists = exists;
-      }
-      //varför stringify här?
-      await fsPromises.writeFile(filePath, JSON.stringify(newCart));
+      await fsPromises.writeFile(filePath, JSON.stringify(newCart)); //skapar filen. gör om newCart-objektet från javascript till JSON-data
 
       return newCart;
     },
     createNewProduct: async (_, args) => {
-      const { productName, price } = args.input;
-      const id = crypto.randomUUID();
+      const { productName, price } = args.input; //hämtar namn ochh pris från inputen
+      const id = crypto.randomUUID(); //genererar ett random id
 
       const newProduct = {
+        //skapar ett nytt objekt med inputsen-.
         productId: id,
         productName: productName,
         price: price,
       };
 
-      let filePath = path.join(productDirectory, `${newProduct.id}.json`);
+      let filePath = path.join(productDirectory, `${newProduct.id}.json`); //skapar filvägen
 
       let idExists = true;
       while (idExists) {
-        const exists = await fileExists(filePath);
+        const exists = await fileExists(filePath); //om filen redan finns. Alltså fil med samma id, lagra i variabeln exists
 
         if (exists) {
-          newProduct.productId = crypto.randomUUID();
+          //om exists = true
+          newProduct.productId = crypto.randomUUID(); //ge id ett nytt slumpat id
           filePath = path.join(
+            //skapa ny filväf med nya id
             productDirectory,
             `${newProduct.productId}.json`
           );
@@ -102,7 +97,7 @@ exports.resolvers = {
         idExists = exists;
       }
 
-      await fsPromises.writeFile(filePath, JSON.stringify(newProduct));
+      await fsPromises.writeFile(filePath, JSON.stringify(newProduct)); //skapa/skriv över ny fil. Gör först om newProduct från js till JSON
 
       return newProduct;
     },
