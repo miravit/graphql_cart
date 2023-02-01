@@ -156,5 +156,54 @@ exports.resolvers = {
 
       return updatedCart; //returnerar den uppdaterade varukorgen så vi kan göra om allt!
     },
+    deleteProduct: async (_, args) => {
+      // get project id
+      const productId = args.productId; //hämta product id (id jag skriver in i args)
+
+      const filePath = path.join(productDirectory, `${productId}.json`); // hittar productfilen med det productid.
+
+      const productExists = await fileExists(filePath); //finns det en fil med det ID? annars felmeddelande
+      if (!productExists)
+        return new GraphQLError("That product does not exist");
+
+      try {
+        //om TRUE deletefile
+        await deleteFile(filePath); //tar bort den filen.
+      } catch (error) {
+        //om error returnera id som jag använder försöker radera samt att success: fail
+        return {
+          deletedId: productId,
+          success: false,
+        };
+      }
+
+      return {
+        deletedId: productId, //om det lyckades returnera productID som togs bort samt success:true
+        success: true,
+      };
+    },
+    deleteCart: async (_, args) => {
+      const cartId = args.cartId; //hämta cartID
+
+      const filePath = path.join(cartDirectory, `${cartId}.json`); //sök om det finns en fil med detta cartId
+
+      const cartExists = await fileExists(filePath); //finns det en fil med det ID? annars felmeddelande
+      if (!cartExists) return new GraphQLError("That cart does not exist");
+
+      try {
+        //om TRUE deletefile
+        await deleteFile(filePath); //tar bort den filen.
+      } catch (error) {
+        //om error returnera id som jag använder försöker radera samt att success: fail
+        return {
+          deletedId: cartId,
+          success: false,
+        };
+      }
+      return {
+        deletedId: cartId, //om det lyckades returnera cartID som togs bort samt success:true
+        success: true,
+      };
+    },
   },
 };
