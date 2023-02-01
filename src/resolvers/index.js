@@ -129,7 +129,7 @@ exports.resolvers = {
       });
       //console.log(cartFile);
 
-      let shoppingCart = JSON.parse(cartFile); // gör om våran cartfile till json-objekt och lägger till i shoppingcartvariabeln. shoppingCart är alltså våran cart som innehåller alla products.
+      let shoppingCart = JSON.parse(cartFile); // gör om våran cartfile från JSON till javascript-objekt och lägger till i shoppingcartvariabeln. shoppingCart är alltså våran cart som innehåller alla products.
       //console.log("kolla här:", shoppingCart);
 
       const newProduct = await fsPromises.readFile(productFilepath, {
