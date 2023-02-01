@@ -8,8 +8,8 @@ const {
 const { GraphQLError, printType } = require("graphql");
 const crypto = require("crypto");
 
-const cartDirectory = path.join(__dirname, "..", "data", "carts");
-const productDirectory = path.join(__dirname, "..", "data", "products");
+const cartDirectory = path.join(__dirname, "..", "data", "carts"); //filvägen till mina carts-filer
+const productDirectory = path.join(__dirname, "..", "data", "products"); //filvägen till mina products-filer
 
 exports.resolvers = {
   Query: {
