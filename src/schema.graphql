@@ -28,6 +28,7 @@ type Mutation {
 
   deleteCart(cartId: ID!): DeletedResourceResponse
   deleteProduct(productId: ID!): DeletedResourceResponse
+  deleteProductFromCart(cartId: ID!, productId: ID!): Cart
 }
 
 input CreateNewProductInput {

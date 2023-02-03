@@ -5,90 +5,82 @@ const {
   deleteFile,
   getDirectoryFileNames,
 } = require("../utils/fileHandling");
-const { GraphQLError, printType } = require("graphql");
+const { GraphQLError } = require("graphql");
 const crypto = require("crypto");
+const { allowedNodeEnvironmentFlags } = require("process");
 
-const cartDirectory = path.join(__dirname, "..", "data", "carts"); //filvägen till mina carts-filer
-const productDirectory = path.join(__dirname, "..", "data", "products"); //filvägen till mina products-filer
+const cartDirectory = path.join(__dirname, "..", "data", "carts");
+const productDirectory = path.join(__dirname, "..", "data", "products");
 
 exports.resolvers = {
   Query: {
     getAllCarts: async (_, args) => {
-      const carts = await getDirectoryFileNames(cartDirectory); //alla filer i carts
+      const carts = await getDirectoryFileNames(cartDirectory);
 
       const cartData = [];
 
       for (const file of carts) {
-        //för varje fil i cartsmappen
-        const filePath = path.join(cartDirectory, file); //gå in i filen
+        const filePath = path.join(cartDirectory, file);
 
         const fileContents = await fsPromises.readFile(filePath, {
-          //hämta och läs filen
           encoding: "utf-8",
         });
-        const data = JSON.parse(fileContents); //gör om från JSON till javascript
+        const data = JSON.parse(fileContents);
 
-        cartData.push(data); //pusha objekten i tomma listan så de kan presenteras.
+        cartData.push(data);
       }
-      return cartData; //returnera listan.
+      return cartData;
     },
     getCartById: async (_, args) => {
-      const cartId = args.cartId; //lagra id som skrivits in i inputen i cartID-variabeln
+      const cartId = args.cartId;
 
-      const cartFilePath = path.join(cartDirectory, `${cartId}.json`); //hitta sökvägen
+      const cartFilePath = path.join(cartDirectory, `${cartId}.json`);
 
-      const cartExists = await fileExists(cartFilePath); //filen hittas
+      const cartExists = await fileExists(cartFilePath);
 
       if (!cartExists)
-        //om det inte blir någon response och filen inte finns skickas felmeddelande
         return new GraphQLError("The cart you are looking for does not exist");
       const cartData = await fsPromises.readFile(cartFilePath, {
-        //om den finns så läses filens innehåll här och lagras i cartData-variabeln
         encoding: "utf-8",
       });
 
-      const data = JSON.parse(cartData); //gör om från JSON till javascript lägg i variabeln data
+      const data = JSON.parse(cartData);
 
-      return data; //returnera data
+      return data;
     },
   },
   Mutation: {
     createNewCart: async (_, args) => {
       const newCart = {
-        //skapar ny cart där id blir slumpat, totalamount är 0 och product-listan är tom.
         id: crypto.randomUUID(),
         totalamount: 0,
         products: [],
       };
 
-      let filePath = path.join(cartDirectory, `${newCart.id}.json`); //skapar filvägen med nya ID
+      let filePath = path.join(cartDirectory, `${newCart.id}.json`);
 
-      await fsPromises.writeFile(filePath, JSON.stringify(newCart)); //skapar filen. gör om newCart-objektet från javascript till JSON-data
+      await fsPromises.writeFile(filePath, JSON.stringify(newCart));
 
       return newCart;
     },
     createNewProduct: async (_, args) => {
-      const { productName, price } = args.input; //hämtar namn ochh pris från inputen
-      const id = crypto.randomUUID(); //genererar ett random id
+      const { productName, price } = args.input;
+      const id = crypto.randomUUID();
 
       const newProduct = {
-        //skapar ett nytt objekt med inputsen-.
         productId: id,
         productName: productName,
         price: price,
       };
 
-      let filePath = path.join(productDirectory, `${newProduct.id}.json`); //skapar filvägen
-
+      let filePath = path.join(productDirectory, `${newProduct.id}.json`);
       let idExists = true;
       while (idExists) {
-        const exists = await fileExists(filePath); //om filen redan finns. Alltså fil med samma id, lagra i variabeln exists
+        const exists = await fileExists(filePath);
 
         if (exists) {
-          //om exists = true
-          newProduct.productId = crypto.randomUUID(); //ge id ett nytt slumpat id
+          newProduct.productId = crypto.randomUUID();
           filePath = path.join(
-            //skapa ny filväf med nya id
             productDirectory,
             `${newProduct.productId}.json`
           );
@@ -97,75 +89,66 @@ exports.resolvers = {
         idExists = exists;
       }
 
-      await fsPromises.writeFile(filePath, JSON.stringify(newProduct)); //skapa/skriv över ny fil. Gör först om newProduct från js till JSON
+      await fsPromises.writeFile(filePath, JSON.stringify(newProduct));
 
       return newProduct;
     },
     addProductToCart: async (_, args) => {
-      const { cartId, productId } = args; //hämta cartid och product id. Dessa är alltså de man skriver in i apollo under variables
+      const { cartId, productId } = args;
 
-      const filePath = path.join(cartDirectory, `${cartId}.json`); //hitta carten med det id som skrivits in i args
-      const cartExist = await fileExists(filePath); //om filen finns läggs den i cartExist.
+      const filePath = path.join(cartDirectory, `${cartId}.json`);
+      const cartExist = await fileExists(filePath);
 
       if (!cartExist) {
-        return new GraphQLError("This cart does not exist!"); //om carten med det it inte hittas. returnera felmeddelande
+        return new GraphQLError("This cart does not exist!");
       }
 
-      const productFilepath = path.join(productDirectory, `${productId}.json`); // hitta productsfilen med id som skrevs in i args.
-      const productExist = await fileExists(productFilepath); //om filen finns lagras den i variabeln productexist.
+      const productFilepath = path.join(productDirectory, `${productId}.json`);
+      const productExist = await fileExists(productFilepath);
 
       if (!productExist) {
-        return new GraphQLError("This product doesn't exist!"); //om det inte finns en fil med det id. Skicka felmeddelande
+        return new GraphQLError("This product doesn't exist!");
       }
 
       const cartFile = await fsPromises.readFile(filePath, {
-        //läser cartfilen inkl alla products den innehåller. filepath är pathen och encoding gör att vi kan läsa den tydligare
         encoding: "utf-8",
       });
-      //console.log(cartFile);
 
-      let shoppingCart = JSON.parse(cartFile); // gör om våran cartfile från JSON till javascript-objekt och lägger till i shoppingcartvariabeln. shoppingCart är alltså våran cart som innehåller alla products.
-      //console.log("kolla här:", shoppingCart);
+      let shoppingCart = JSON.parse(cartFile);
 
       const newProduct = await fsPromises.readFile(productFilepath, {
-        //läser productfilen som väljs ut genom productid.
         encoding: "utf-8",
       });
-      //console.log(newProduct); nya produkten som med hjälp av producId läggs till i befintlig cart.
-      const productToCart = JSON.parse(newProduct); // gör om nya produkten som skapats från json-data till javascriptobjekt. nu innehåller alltså variabeln productToCart den nya produkten i javascriptformat eftersom att vi ska pusha in den i våran cart.
-      //vi gör om till javascriptobjekt eftersom att det inte går att arbeta med JSON i javascript.
 
-      const products = shoppingCart.products; //alla produkter som finns i en specifik shoppingcart. Visar endast produkterna. loggar man shoppingcart ser man hela varukorgen med dess id och totalAmount, samt alla prductsobjekt inuti.
+      const productToCart = JSON.parse(newProduct);
 
-      shoppingCart.products.push(productToCart); //pushar nya produkten vi valt genom productId och pushar in den i shoppingcart.products.Detta för vi vill att den ska läggas i products inuti carts och inte direkt i carts.
+      const products = shoppingCart.products;
 
-      let totalamount = 0; //deklarerar totalsumman
+      shoppingCart.products.push(productToCart);
+
+      let totalamount = 0;
       for (let i = 0; i < shoppingCart.products.length; i++) {
-        //loopar igenom alla products som finns i varukorgen och skriver ut varje pris.
-        totalamount += shoppingCart.products[i].price; //totalamount plussas på med priset för varje varv den körs i loopen
+        totalamount += shoppingCart.products[i].price;
       }
 
-      const updatedCart = { cartId, products, totalamount }; // hämtar nya cartId, products och totalamount och
+      const updatedCart = { cartId, products, totalamount };
 
-      await fsPromises.writeFile(filePath, JSON.stringify(updatedCart)); //skriver över gamla filen efersom den har samma cartId. gör även om från javascript till JSON-data. Den uppdaterar alltså gamla varukorgen
+      await fsPromises.writeFile(filePath, JSON.stringify(updatedCart));
 
-      return updatedCart; //returnerar den uppdaterade varukorgen så vi kan göra om allt!
+      return updatedCart;
     },
     deleteProduct: async (_, args) => {
-      // get project id
-      const productId = args.productId; //hämta product id (id jag skriver in i args)
+      const productId = args.productId;
 
-      const filePath = path.join(productDirectory, `${productId}.json`); // hittar productfilen med det productid.
+      const filePath = path.join(productDirectory, `${productId}.json`);
 
-      const productExists = await fileExists(filePath); //finns det en fil med det ID? annars felmeddelande
+      const productExists = await fileExists(filePath);
       if (!productExists)
         return new GraphQLError("That product does not exist");
 
       try {
-        //om TRUE deletefile
-        await deleteFile(filePath); //tar bort den filen.
+        await deleteFile(filePath);
       } catch (error) {
-        //om error returnera id som jag använder försöker radera samt att success: fail
         return {
           deletedId: productId,
           success: false,
@@ -173,32 +156,111 @@ exports.resolvers = {
       }
 
       return {
-        deletedId: productId, //om det lyckades returnera productID som togs bort samt success:true
+        deletedId: productId,
         success: true,
       };
     },
     deleteCart: async (_, args) => {
-      const cartId = args.cartId; //hämta cartID
+      const cartId = args.cartId;
 
-      const filePath = path.join(cartDirectory, `${cartId}.json`); //sök om det finns en fil med detta cartId
+      const filePath = path.join(cartDirectory, `${cartId}.json`);
 
-      const cartExists = await fileExists(filePath); //finns det en fil med det ID? annars felmeddelande
+      const cartExists = await fileExists(filePath);
       if (!cartExists) return new GraphQLError("That cart does not exist");
 
       try {
-        //om TRUE deletefile
-        await deleteFile(filePath); //tar bort den filen.
+        await deleteFile(filePath);
       } catch (error) {
-        //om error returnera id som jag använder försöker radera samt att success: fail
         return {
           deletedId: cartId,
           success: false,
         };
       }
       return {
-        deletedId: cartId, //om det lyckades returnera cartID som togs bort samt success:true
+        deletedId: cartId,
         success: true,
       };
+    },
+
+    // deleteProduct: async (_, args) => {
+    //   const { cartId, productId } = args;
+    //   const filePath = path.join(cartDirectory, `${cartId}.json`);
+    //   const cartExists = await fileExists(filePath);
+    //   const productFilePath = path.join(productDirectory, `${productId}.json`);
+    //   const productExists = await fileExists(productFilePath);
+    //   if (!cartExists) {
+    //     return new GraphQLError("Shoppingcart does not exist");
+    //   }
+    //   if (!productExists) {
+    //     return new GraphQLError("Product does not exist");
+    //   }
+    //   try {
+    //     const cartData = await fsPromises.readFile(filePath, {
+    //       encoding: "utf-8",
+    //     });
+    //     let shoppingCart = JSON.parse(cartData);
+    //     const cartProducts = shoppingCart.products;
+    //     let totalPrice = shoppingCart.totalamount;
+    //     const product = await fsPromises.readFile(productFilePath, {
+    //       encoding: "utf-8",
+    //     });
+    //     const productToRemove = JSON.parse(product);
+
+    //     for (let i = 0; i < cartProducts.length; i++) {
+    //       if (cartProducts[i].id === productId) {
+    //         cartProducts.splice(i, 1);
+    //       }
+    //     }
+    //     totalPrice = 0;
+    //     for (let i = 0; i < cartProducts.length; i++) {
+    //       totalPrice += cartProducts[i].productPrice;
+    //     }
+    //     let id = cartId; // förstår inte varför, men funkar inte om jag skriver cartId i updatedCart
+    //     const updatedCart = { id, cartProducts, totalPrice };
+    //     await fsPromises.writeFile(filePath, JSON.stringify(updatedCart));
+    //     return updatedCart;
+    //   } catch (error) {
+    //     return new GraphQLError("Could not delete");
+    //   }
+    // },
+    deleteProductFromCart: async (_, args) => {
+      const { cartId, productId } = args;
+
+      const filePath = path.join(cartDirectory, `${cartId}.json`);
+      const cartExist = await fileExists(filePath);
+      const productFilepath = path.join(productDirectory, `${productId}.json`);
+      const productExist = await fileExists(productFilepath);
+
+      if (!cartExist) {
+        return new GraphQLError("This cart does not exist!");
+      }
+      if (!productExist) {
+        return new GraphQLError("This product doesn't exist!");
+      }
+
+      const cartFile = await fsPromises.readFile(filePath, {
+        encoding: "utf-8",
+      });
+      const product = await fsPromises.readFile(productFilepath, {
+        encoding: "utf-8",
+      });
+
+      let shoppingCart = JSON.parse(cartFile);
+      let cartProducts = shoppingCart.products;
+      let totalamount = shoppingCart.totalamount;
+
+      console.log(cartProducts);
+
+      for (let i = 0; i < cartProducts.length; i++) {
+        if (productId === cartProducts[i].productId) {
+          cartProducts.splice(i, 1);
+        }
+      }
+      const updatedCart = { cartId, cartProducts, totalamount };
+
+      await fsPromises.writeFile(filePath, JSON.stringify(updatedCart));
+
+      return updatedCart;
     },
   },
 };
