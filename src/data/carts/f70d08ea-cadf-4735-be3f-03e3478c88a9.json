@@ -1,11 +1,16 @@
 {
   "cartId": "f70d08ea-cadf-4735-be3f-03e3478c88a9",
-  "cartProducts": [
+  "products": [
     {
-      "productId": "e1c0060e-2232-497e-be65-31847f825e0a",
-      "productName": "slagborr",
-      "price": 469
+      "productId": "e60947b3-d102-4d2d-9f46-279795379241",
+      "productName": "BÖNOR",
+      "price": 14
+    },
+    {
+      "productId": "e7f3bc1f-ca46-441b-b6a4-e3828ffd347f",
+      "productName": "KYCKLING",
+      "price": 76
     }
   ],
-  "totalamount": 483
+  "totalamount": 1057
 }

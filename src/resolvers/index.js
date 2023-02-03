@@ -7,7 +7,6 @@ const {
 } = require("../utils/fileHandling");
 const { GraphQLError } = require("graphql");
 const crypto = require("crypto");
-const { allowedNodeEnvironmentFlags } = require("process");
 
 const cartDirectory = path.join(__dirname, "..", "data", "carts");
 const productDirectory = path.join(__dirname, "..", "data", "products");
@@ -65,10 +64,9 @@ exports.resolvers = {
     },
     createNewProduct: async (_, args) => {
       const { productName, price } = args.input;
-      const id = crypto.randomUUID();
 
       const newProduct = {
-        productId: id,
+        productId: crypto.randomUUID(),
         productName: productName,
         price: price,
       };
@@ -121,8 +119,10 @@ exports.resolvers = {
       });
 
       const productToCart = JSON.parse(newProduct);
+      // console.log(productToCart);
 
       const products = shoppingCart.products;
+      console.log(products);
 
       shoppingCart.products.push(productToCart);
 
@@ -130,35 +130,12 @@ exports.resolvers = {
       for (let i = 0; i < shoppingCart.products.length; i++) {
         totalamount += shoppingCart.products[i].price;
       }
-
-      const updatedCart = { cartId, products, totalamount };
+      let id = cartId;
+      const updatedCart = { id, products, totalamount };
 
       await fsPromises.writeFile(filePath, JSON.stringify(updatedCart));
 
       return updatedCart;
-    },
-    deleteProduct: async (_, args) => {
-      const productId = args.productId;
-
-      const filePath = path.join(productDirectory, `${productId}.json`);
-
-      const productExists = await fileExists(filePath);
-      if (!productExists)
-        return new GraphQLError("That product does not exist");
-
-      try {
-        await deleteFile(filePath);
-      } catch (error) {
-        return {
-          deletedId: productId,
-          success: false,
-        };
-      }
-
-      return {
-        deletedId: productId,
-        success: true,
-      };
     },
     deleteCart: async (_, args) => {
       const cartId = args.cartId;
@@ -246,17 +223,26 @@ exports.resolvers = {
       });
 
       let shoppingCart = JSON.parse(cartFile);
-      let cartProducts = shoppingCart.products;
+      //console.log(shoppingCart);
+      let products = shoppingCart.products;
+      //console.log(shoppingCart.products);
       let totalamount = shoppingCart.totalamount;
 
-      console.log(cartProducts);
+      //console.log(cartProducts);
 
-      for (let i = 0; i < cartProducts.length; i++) {
-        if (productId === cartProducts[i].productId) {
-          cartProducts.splice(i, 1);
+      for (let i = 0; i < shoppingCart.products.length; i++) {
+        if (productId === shoppingCart.products[i].productId) {
+          //console.log("hej");
+          shoppingCart.products.splice(i, 1);
         }
       }
-      const updatedCart = { cartId, cartProducts, totalamount };
+      totalPrice = 0;
+      for (let i = 0; i < products.length; i++) {
+        totalPrice += products[i].productPrice;
+      }
+      let id = cartId;
+      const updatedCart = { id, products, totalamount };
+      console.log(products);
 
       await fsPromises.writeFile(filePath, JSON.stringify(updatedCart));
 
