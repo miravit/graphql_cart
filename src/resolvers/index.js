@@ -119,8 +119,6 @@ exports.resolvers = {
       });
 
       const productToCart = JSON.parse(newProduct);
-      // console.log(productToCart);
-
       const products = shoppingCart.products;
       console.log(products);
 
@@ -159,47 +157,6 @@ exports.resolvers = {
       };
     },
 
-    // deleteProduct: async (_, args) => {
-    //   const { cartId, productId } = args;
-    //   const filePath = path.join(cartDirectory, `${cartId}.json`);
-    //   const cartExists = await fileExists(filePath);
-    //   const productFilePath = path.join(productDirectory, `${productId}.json`);
-    //   const productExists = await fileExists(productFilePath);
-    //   if (!cartExists) {
-    //     return new GraphQLError("Shoppingcart does not exist");
-    //   }
-    //   if (!productExists) {
-    //     return new GraphQLError("Product does not exist");
-    //   }
-    //   try {
-    //     const cartData = await fsPromises.readFile(filePath, {
-    //       encoding: "utf-8",
-    //     });
-    //     let shoppingCart = JSON.parse(cartData);
-    //     const cartProducts = shoppingCart.products;
-    //     let totalPrice = shoppingCart.totalamount;
-    //     const product = await fsPromises.readFile(productFilePath, {
-    //       encoding: "utf-8",
-    //     });
-    //     const productToRemove = JSON.parse(product);
-
-    //     for (let i = 0; i < cartProducts.length; i++) {
-    //       if (cartProducts[i].id === productId) {
-    //         cartProducts.splice(i, 1);
-    //       }
-    //     }
-    //     totalPrice = 0;
-    //     for (let i = 0; i < cartProducts.length; i++) {
-    //       totalPrice += cartProducts[i].productPrice;
-    //     }
-    //     let id = cartId; // förstår inte varför, men funkar inte om jag skriver cartId i updatedCart
-    //     const updatedCart = { id, cartProducts, totalPrice };
-    //     await fsPromises.writeFile(filePath, JSON.stringify(updatedCart));
-    //     return updatedCart;
-    //   } catch (error) {
-    //     return new GraphQLError("Could not delete");
-    //   }
-    // },
     deleteProductFromCart: async (_, args) => {
       const { cartId, productId } = args;
 
@@ -223,16 +180,12 @@ exports.resolvers = {
       });
 
       let shoppingCart = JSON.parse(cartFile);
-      //console.log(shoppingCart);
+
       let products = shoppingCart.products;
-      //console.log(shoppingCart.products);
+
       let totalamount = shoppingCart.totalamount;
-
-      //console.log(cartProducts);
-
       for (let i = 0; i < shoppingCart.products.length; i++) {
         if (productId === shoppingCart.products[i].productId) {
-          //console.log("hej");
           shoppingCart.products.splice(i, 1);
         }
       }
